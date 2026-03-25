@@ -9,7 +9,10 @@
     "start": "node dist/server.js",
     "dev": "tsc --watch",
     "test": "node --test",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "init-db": "node scripts/init_db.js",
+    "clean": "rm -rf dist node_modules data/*.db",
+    "release": "npm run build && npm run test"
   },
   "keywords": [
     "mcp",
