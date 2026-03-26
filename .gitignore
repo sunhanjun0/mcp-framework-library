@@ -9,9 +9,10 @@ dist/
 build/
 *.tsbuildinfo
 
-# 数据库
+# 数据库（保留 .gitkeep）
 data/*.db
 data/*.sqlite
+!data/.gitkeep
 
 # 日志
 logs/
@@ -28,6 +29,7 @@ npm-debug.log*
 .vscode/
 *.swp
 *.swo
+!.vscode/extensions.json
 
 # 系统文件
 .DS_Store
@@ -37,3 +39,7 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# 测试
+coverage/
+*.test.js
