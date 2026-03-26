@@ -21,6 +21,9 @@
     "ai",
     "fastapi",
     "react",
+    "vue",
+    "django",
+    "express",
     "code-generation"
   ],
   "author": "sunhanjun0",
