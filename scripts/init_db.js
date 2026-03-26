@@ -4,10 +4,12 @@
  * 创建 SQLite 数据库并导入初始数据
  */
 
-import { Database } from 'better-sqlite3';
+import pkg from 'better-sqlite3';
+const Database = pkg.default || pkg;
+
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, '../data/framework_docs.db');
@@ -24,9 +26,8 @@ db.pragma('foreign_keys = ON');
 // 创建表结构
 console.log('📋 创建表结构...');
 
-db.exec(`
-  -- 框架表
-  CREATE TABLE IF NOT EXISTS frameworks (
+// 分步创建表
+db.exec(`CREATE TABLE IF NOT EXISTS frameworks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL,
@@ -36,10 +37,10 @@ db.exec(`
     official_docs_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+)`);
+console.log('✓ frameworks table created');
 
-  -- API 表
-  CREATE TABLE IF NOT EXISTS apis (
+db.exec(`CREATE TABLE IF NOT EXISTS apis (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     framework_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -54,13 +55,11 @@ db.exec(`
     related_apis TEXT,
     changelog TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (framework_id) REFERENCES frameworks(id),
-    UNIQUE(framework_id, name)
-  );
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
+console.log('✓ apis table created');
 
-  -- 示例代码表
-  CREATE TABLE IF NOT EXISTS examples (
+db.exec(`CREATE TABLE IF NOT EXISTS examples (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     framework_id INTEGER NOT NULL,
     title TEXT NOT NULL,
@@ -70,13 +69,12 @@ db.exec(`
     dependencies TEXT,
     tags TEXT,
     difficulty TEXT DEFAULT 'intermediate',
-    references TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (framework_id) REFERENCES frameworks(id)
-  );
+    ref_urls TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
+console.log('✓ examples table created');
 
-  -- 最佳实践表
-  CREATE TABLE IF NOT EXISTS best_practices (
+db.exec(`CREATE TABLE IF NOT EXISTS best_practices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     framework_id INTEGER NOT NULL,
     topic TEXT NOT NULL,
@@ -85,18 +83,18 @@ db.exec(`
     code TEXT,
     impact TEXT,
     effort TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (framework_id) REFERENCES frameworks(id)
-  );
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
+console.log('✓ best_practices table created');
 
-  -- 创建索引
-  CREATE INDEX IF NOT EXISTS idx_apis_framework ON apis(framework_id);
-  CREATE INDEX IF NOT EXISTS idx_apis_name ON apis(name);
-  CREATE INDEX IF NOT EXISTS idx_examples_framework ON examples(framework_id);
-  CREATE INDEX IF NOT EXISTS idx_examples_pattern ON examples(pattern);
-  CREATE INDEX IF NOT EXISTS idx_best_practices_framework ON best_practices(framework_id);
-  CREATE INDEX IF NOT EXISTS idx_best_practices_topic ON best_practices(topic);
-`);
+// 创建索引
+db.exec(`CREATE INDEX IF NOT EXISTS idx_apis_framework ON apis(framework_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_apis_name ON apis(name)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_examples_framework ON examples(framework_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_examples_pattern ON examples(pattern)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_best_practices_framework ON best_practices(framework_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_best_practices_topic ON best_practices(topic)`);
+console.log('✓ indexes created');
 
 console.log('✅ 表结构创建完成');
 
@@ -104,56 +102,18 @@ console.log('✅ 表结构创建完成');
 console.log('📦 插入框架数据...');
 
 const frameworks = [
-  {
-    name: 'FastAPI',
-    type: 'backend',
-    language: 'Python',
-    version: '0.109.0',
-    description: '现代、高性能的 Python Web 框架，用于构建 API',
-    docs_url: 'https://fastapi.tiangolo.com/'
-  },
-  {
-    name: 'React',
-    type: 'frontend',
-    language: 'JavaScript/TypeScript',
-    version: '18.2.0',
-    description: '用于构建用户界面的 JavaScript 库',
-    docs_url: 'https://react.dev/'
-  },
-  {
-    name: 'Express',
-    type: 'backend',
-    language: 'JavaScript/TypeScript',
-    version: '4.18.2',
-    description: 'Node.js Web 应用框架',
-    docs_url: 'https://expressjs.com/'
-  },
-  {
-    name: 'Vue',
-    type: 'frontend',
-    language: 'JavaScript/TypeScript',
-    version: '3.4.0',
-    description: '渐进式 JavaScript 框架',
-    docs_url: 'https://vuejs.org/'
-  },
-  {
-    name: 'Django',
-    type: 'backend',
-    language: 'Python',
-    version: '5.0.0',
-    description: '高级 Python Web 框架',
-    docs_url: 'https://www.djangoproject.com/'
-  }
+  ['FastAPI', 'backend', 'Python', '0.109.0', '现代、高性能的 Python Web 框架', 'https://fastapi.tiangolo.com/'],
+  ['React', 'frontend', 'JavaScript/TypeScript', '18.2.0', '用于构建用户界面的 JavaScript 库', 'https://react.dev/'],
+  ['Express', 'backend', 'JavaScript/TypeScript', '4.18.2', 'Node.js Web 应用框架', 'https://expressjs.com/'],
+  ['Vue', 'frontend', 'JavaScript/TypeScript', '3.4.0', '渐进式 JavaScript 框架', 'https://vuejs.org/'],
+  ['Django', 'backend', 'Python', '5.0.0', '高级 Python Web 框架', 'https://www.djangoproject.com/']
 ];
 
-const insertFramework = db.prepare(`
-  INSERT OR REPLACE INTO frameworks (name, type, language, latest_version, description, official_docs_url)
-  VALUES (?, ?, ?, ?, ?, ?)
-`);
+const insertFramework = db.prepare(`INSERT OR REPLACE INTO frameworks (name, type, language, latest_version, description, official_docs_url) VALUES (?, ?, ?, ?, ?, ?)`);
 
 for (const fw of frameworks) {
-  insertFramework.run(fw.name, fw.type, fw.language, fw.version, fw.description, fw.docs_url);
-  console.log(`  ✓ ${fw.name} v${fw.version}`);
+  insertFramework.run(...fw);
+  console.log(`  ✓ ${fw[0]} v${fw[2]}`);
 }
 
 // 插入 FastAPI 示例

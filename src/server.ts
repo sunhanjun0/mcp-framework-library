@@ -15,10 +15,13 @@ import { Database } from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// @ts-ignore - better-sqlite3 is CommonJS module
+const DatabaseConstructor = Database;
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 初始化数据库
-const db = new Database(join(__dirname, '../data/framework_docs.db'));
+const db = new DatabaseConstructor(join(__dirname, '../data/framework_docs.db'));
 
 // 创建 MCP 服务器
 const server = new Server(
@@ -134,7 +137,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(docs, null, 2, ensureASCII),
+            text: JSON.stringify(docs, ensureASCII, 2),
           },
         ],
       };
@@ -158,7 +161,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(practices, null, 2, ensureASCII),
+            text: JSON.stringify(practices, ensureASCII, 2),
           },
         ],
       };
@@ -170,7 +173,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(frameworks, null, 2, ensureASCII),
+            text: JSON.stringify(frameworks, ensureASCII, 2),
           },
         ],
       };
@@ -185,7 +188,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(comparison, null, 2, ensureASCII),
+            text: JSON.stringify(comparison, ensureASCII, 2),
           },
         ],
       };
