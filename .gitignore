@@ -43,3 +43,9 @@ temp/
 # 测试
 coverage/
 *.test.js
+
+# Docker
+*.log
+*.pid
+*.seed
+*.pid.lock
